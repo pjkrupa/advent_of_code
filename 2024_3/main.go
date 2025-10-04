@@ -36,28 +36,7 @@ func find_matches(str string) []string {
 }
 
 func make_sections(str string) []string {
-	var sections []string
-	first_do := strings.Index(str, "do")
-	first_section := str[:first_do]
-	first_section = "do" + first_section
-	sections = append(sections, first_section)
-
-	for {
-		start := strings.Index(str, "do")
-		if start == -1 {
-			break
-		}
-
-		next := strings.Index(str[start+2:], "do")
-		if next == -1 {
-			sections = append(sections, str[start:])
-			break
-		}
-
-		next += start + 2
-		sections = append(sections, str[start:next])
-		str = str[next:]
-	}
+	sections := strings.Split(str, "do")
 	return sections
 }
 
@@ -78,7 +57,7 @@ func main() {
 	for _, section := range do_sections {
 		// fmt.Println("---------------------------------------------------------------")
 		// fmt.Println(section)
-		if !strings.HasPrefix(section, "don't") {
+		if !strings.HasPrefix(section, "n't") {
 			do_matches := find_matches(section)
 			for _, str := range do_matches {
 				do_prod := calculate(str)
@@ -87,8 +66,7 @@ func main() {
 		}
 	}
 	fmt.Println("Do result:", do_total)
-	back_together := strings.Join(do_sections, "")
+	back_together := strings.Join(do_sections, "do")
 	fmt.Println("Initial length:", len(my_string))
 	fmt.Println("Final length:", len(back_together))
-
 }
