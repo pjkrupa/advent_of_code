@@ -38,16 +38,78 @@ func (d *Cursor) TurnRight() {
 	}
 }
 
-// // change this to work with runes instead of strings
-func yplus(twodarray *[][]rune, cursor *Cursor) string {
-
-	for y := len(*twodarray) - cursor.Y; y >= 0; y-- {
-		if (*twodarray)[y][cursor.X] == '#' {
-			cursor.Y = y
-		} else {
-			(*twodarray)
+// function to count spaces visited
+func counter(twodarray *[][]rune) int {
+	counter := 1
+	for _, line := range *twodarray {
+		for _, r := range line {
+			if r == 'O' {
+				counter++
+			}
 		}
 	}
+	return counter
+}
+
+func verticle(twodarray *[][]rune, cursor *Cursor) string {
+	moves := 0
+	switch cursor.Facing {
+	case "yplus":
+		for y := cursor.Y - 1; y >= 0; y-- {
+			if (*twodarray)[y][cursor.X] == '#' {
+				cursor.Y = y + 1
+				return fmt.Sprintf("Cursor went up by %d moves.", moves)
+			}
+			moves++
+			(*twodarray)[y][cursor.X] = 'O'
+		}
+		cursor.Y = 0
+		return fmt.Sprintf("Cursor went up by %d moves (to border).", moves)
+
+	case "yminus":
+		for y := cursor.Y + 1; y < len(*twodarray); y++ {
+			if (*twodarray)[y][cursor.X] == '#' {
+				cursor.Y = y - 1
+				return fmt.Sprintf("Cursor went down by %d moves.", moves)
+			}
+			moves++
+			(*twodarray)[y][cursor.X] = 'O'
+		}
+		cursor.Y = len(*twodarray) - 1
+		return fmt.Sprintf("Cursor went down by %d moves (to border).", moves)
+	}
+	return ""
+}
+
+func horizontal(twodarray *[][]rune, cursor *Cursor) string {
+	moves := 0
+	line := (*twodarray)[cursor.Y]
+	switch cursor.Facing {
+	case "xplus":
+		for x := cursor.X + 1; x < len(line); x++ {
+			if line[x] == '#' {
+				cursor.X = x - 1
+				return fmt.Sprintf("Cursor went right by %d moves.", moves)
+			}
+			moves++
+			(*twodarray)[cursor.Y][x] = 'O'
+		}
+		cursor.X = len(line) - 1
+		return fmt.Sprintf("Cursor went right by %d moves (to border).", moves)
+	case "xminus":
+		for x := cursor.X - 1; x >= 0; x-- {
+			if line[x] == '#' {
+				cursor.X = x + 1
+				return fmt.Sprintf("Cursor went left by %d moves.", moves)
+			}
+			moves++
+			(*twodarray)[cursor.Y][x] = 'O'
+		}
+		cursor.X = 0
+		return fmt.Sprintf("Cursor went left by %d moves (to border).", moves)
+
+	}
+	return ""
 }
 
 // finds the initial position of the cursor, instantiates it, and returns it
@@ -79,8 +141,27 @@ func main() {
 	check(err)
 	lines := to_lines(string(data))
 	lines = lines[0 : len(lines)-1]
-	cursor := cursor_pos(lines)
 
-	fmt.Println(cursor.X, cursor.Y, cursor.Facing)
-	fmt.Println(lines[cursor.Y])
+	// get initial cursor position
+	cursor := cursor_pos(lines)
+	moves := 0
+	for (cursor.X != 0 && cursor.X != len(lines[0])-1) && (cursor.Y != 0 && cursor.Y != len(lines)-1) {
+		moves++
+		switch cursor.Facing {
+		case "yplus", "yminus":
+			msg := verticle(&lines, &cursor)
+			fmt.Println(msg)
+			fmt.Println("Coordinates (X, Y):", cursor.X, cursor.Y)
+			cursor.TurnRight()
+		case "xplus", "xminus":
+			msg := horizontal(&lines, &cursor)
+			fmt.Println(msg)
+			fmt.Println("Coordinates (X, Y):", cursor.X, cursor.Y)
+			cursor.TurnRight()
+		}
+	}
+	ocount := counter(&lines)
+	fmt.Println("Final state:", cursor.X, cursor.Y, cursor.Facing)
+	fmt.Println("Spaces counted:", ocount)
+	fmt.Println("Number of moves:", moves)
 }
