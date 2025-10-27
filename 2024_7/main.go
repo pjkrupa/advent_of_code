@@ -21,12 +21,15 @@ func calculate(str string, test_nums []int, test_int int) int {
 		// fmt.Println(str)
 		if i != len(nums)-1 {
 			switch char {
-			case 'm':
+			case '*':
 				// fmt.Println(nums[i] * nums[i+1])
 				nums[i+1] = nums[i] * nums[i+1]
-			case 'a':
+			case '+':
 				// fmt.Println(nums[i] + nums[i+1])
 				nums[i+1] = nums[i] + nums[i+1]
+			case '|':
+				s := strconv.Itoa(nums[i]) + strconv.Itoa(nums[i+1])
+				nums[i+1], _ = strconv.Atoi(s)
 			}
 		}
 		if nums[len(nums)-1] == test_int {
@@ -42,8 +45,9 @@ func make_sequences(nums []int) []string {
 	for range n {
 		var newOutcomes []string
 		for _, s := range outcomes {
-			newOutcomes = append(newOutcomes, s+"a")
-			newOutcomes = append(newOutcomes, s+"m")
+			newOutcomes = append(newOutcomes, s+"+")
+			newOutcomes = append(newOutcomes, s+"*")
+			newOutcomes = append(newOutcomes, s+"|")
 		}
 		outcomes = newOutcomes
 	}
