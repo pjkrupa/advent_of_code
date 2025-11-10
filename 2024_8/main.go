@@ -65,21 +65,62 @@ func calc_antinodes(p2, p3 Point) (Point, Point) {
 	return p1, p4
 }
 
-func antinode_check(lines [][]rune, p Point, seen map[Point]struct{}) {
+func allAntinodes(p2, p3 Point, lines [][]rune, seen2 map[Point]struct{}) {
+	x1, y1 := float64(p2.X), float64(p2.Y)
+	x2, y2 := float64(p3.X), float64(p3.Y)
+
+	seen2[p2] = struct{}{}
+	seen2[p3] = struct{}{}
+
+	dist := math.Hypot(x2-x1, y2-y1)
+	if dist == 0 {
+		return
+	}
+
+	dx := (x2 - x1) / dist
+	dy := (y2 - y1) / dist
+
+	// extend backward from p2
+	x, y := x1-dx*dist, y1-dy*dist
+	for {
+		p := Point{X: int(math.Round(x)), Y: int(math.Round(y))}
+		if !edge_check(p, lines) {
+			break
+		}
+		seen2[p] = struct{}{}
+		x -= dx * dist
+		y -= dy * dist
+	}
+
+	// extend forward from p3
+	x, y = x2+dx*dist, y2+dy*dist
+	for {
+		p := Point{X: int(math.Round(x)), Y: int(math.Round(y))}
+		if !edge_check(p, lines) {
+			break
+		}
+		seen2[p] = struct{}{}
+		x += dx * dist
+		y += dy * dist
+	}
+}
+
+func add_antinode(lines [][]rune, p Point, seen map[Point]struct{}) {
 	if edge_check(p, lines) && !check_exists(p, seen) {
 		seen[p] = struct{}{}
 	}
 }
 
-func search(lines [][]rune, p Point, r rune, seen map[Point]struct{}) {
+func search(lines [][]rune, p Point, r rune, seen map[Point]struct{}, seen2 map[Point]struct{}) {
 	// search up from point
 	for y := p.Y - 1; y >= 0; y-- {
 		for x, n := range lines[y] {
 			if n == r {
 				p2 := Point{X: x, Y: y}
 				a1, a2 := calc_antinodes(p, p2)
-				antinode_check(lines, a1, seen)
-				antinode_check(lines, a2, seen)
+				add_antinode(lines, a1, seen)
+				add_antinode(lines, a2, seen)
+				allAntinodes(p, p2, lines, seen2)
 			}
 		}
 	}
@@ -90,8 +131,9 @@ func search(lines [][]rune, p Point, r rune, seen map[Point]struct{}) {
 			if n == r {
 				p2 := Point{X: x, Y: y}
 				a1, a2 := calc_antinodes(p, p2)
-				antinode_check(lines, a1, seen)
-				antinode_check(lines, a2, seen)
+				add_antinode(lines, a1, seen)
+				add_antinode(lines, a2, seen)
+				allAntinodes(p, p2, lines, seen2)
 			}
 		}
 	}
@@ -103,17 +145,19 @@ func main() {
 	lines := to_lines(string(data))
 	lines = lines[0 : len(lines)-1]
 	seen := make(map[Point]struct{})
+	seen2 := make(map[Point]struct{})
 	// main loop: loop through each line
 	for y, line := range lines {
 		for x, r := range line {
 			if r != '.' {
 				p := Point{X: x, Y: y}
 				// function that searches for antennae, returns count of antinodes
-				search(lines, p, r, seen)
+				search(lines, p, r, seen, seen2)
 			}
 		}
 	}
 	count := len(seen)
-	fmt.Println("Antinodes:", seen)
+	count2 := len(seen2)
 	fmt.Println("Total antinodes:", count)
+	fmt.Println("Total antinodes, part 2:", count2)
 }
